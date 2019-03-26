@@ -47,7 +47,7 @@ podTemplate(
         echo "Building version ${devTag}"
 
         // TBD: Execute Maven Build
-        sh("mvn clean install -DskipTests=true -s ./nexus_settings.xml")
+        sh(mvnCmd + " clean install -DskipTests=true")
         sh("ls -latr ./target/openshift-tasks.war")
       }
 
