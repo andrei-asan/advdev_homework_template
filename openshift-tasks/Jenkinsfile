@@ -37,8 +37,6 @@ podTemplate(
       // Set the tag for the production image: version
       def prodTag = "${version}"
 
-      def GUID = build.getBuildVariables().get('GUID')
-
       def devProject  = "${GUID}-tasks-dev"
 
       def prodProject = "${GUID}-tasks-prod"
