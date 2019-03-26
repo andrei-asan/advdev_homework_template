@@ -33,9 +33,15 @@ podTemplate(
       def version = getVersionFromPom("pom.xml")
 
       // TBD Set the tag for the development image: version + build number
-      def devTag  = ""
+      def devTag  = "${version}-${currentBuild.number}"
       // Set the tag for the production image: version
-      def prodTag = ""
+      def prodTag = "${version}"
+
+      def GUID = build.getBuildVariables().get('GUID')
+
+      def devProject  = "${GUID}-tasks-dev"
+
+      def prodProject = "${GUID}-tasks-prod"
 
       // Using Maven build the war file
       // Do not run tests in this step
@@ -43,24 +49,28 @@ podTemplate(
         echo "Building version ${devTag}"
 
         // TBD: Execute Maven Build
+        sh("mvn clean install -DskipTests=true -s ./nexus_settings.xml")
+        sh("ls -latr ./target/openshift-tasks.war")
       }
 
       // TBD: The next two stages should run in parallel
+      parallel {
+        // Using Maven run the unit tests
+        stage('Unit Tests') {
+          echo "Running Unit Tests"
 
-      // Using Maven run the unit tests
-      stage('Unit Tests') {
-        echo "Running Unit Tests"
+          // TBD: Execute Unit Tests
+          sh(mvnCmd + " test")
+        }
 
-        // TBD: Execute Unit Tests
+        // Using Maven to call SonarQube for Code Analysis
+        stage('Code Analysis') {
+          echo "Running Code Analysis"
+
+          // TBD: Execute Sonarqube Tests
+          sh(mvnCmd + " admin:redhat -Dsonar.host.url=http://sonarqube.gpte-hw-cicd.svc.cluster.local:9000")
+        }
       }
-
-      // Using Maven to call SonarQube for Code Analysis
-      stage('Code Analysis') {
-        echo "Running Code Analysis"
-
-        // TBD: Execute Sonarqube Tests
-      }
-
       // Publish the built war file to Nexus
       stage('Publish to Nexus') {
         echo "Publish to Nexus"
