@@ -19,7 +19,7 @@ oc new-app --template=jenkins-persistent \
 --param=VOLUME_CAPACITY=4Gi \
  -n ${GUID}-jenkins
 
-oc set resources dc jenkins --requests=cpu=1 --limits=cpu=1
+oc set resources dc jenkins --requests=cpu=1 --limits=cpu=1 -n ${GUID}-jenkins
 
 # Create custom agent container image with skopeo
 # TBD
