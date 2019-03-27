@@ -19,6 +19,7 @@ oc new-app --template=jenkins-persistent \
 --param=VOLUME_CAPACITY=4Gi \
  -n ${GUID}-jenkins
 
+sleep 10
 oc set resources dc jenkins --requests=cpu=1 --limits=cpu=1
 
 # Create custom agent container image with skopeo
@@ -26,14 +27,6 @@ oc set resources dc jenkins --requests=cpu=1 --limits=cpu=1
 oc new-build  -D $'FROM docker.io/openshift/jenkins-agent-maven-35-centos7:v3.11\n
       USER root\nRUN yum -y install skopeo && yum clean all\n
       USER 1001' --name=jenkins-agent-appdev -n ${GUID}-jenkins
-
-#add slave to jenkins
-oc label is jenkins-agent-appdev role=jenkins-slave
-
-oc create configmap maven-appdev \
-    --from-file=PodTemplate.xml \
-
-oc label configmap maven-appdev role=jenkins-slave
 
 # Create pipeline build config pointing to the ${REPO} with contextDir `openshift-tasks`
 oc new-build ${REPO} --context-dir=openshift-tasks --strategy=pipeline --name=tasks-pipeline -e GUID=${GUID}
