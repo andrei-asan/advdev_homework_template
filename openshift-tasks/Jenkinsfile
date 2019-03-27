@@ -160,7 +160,7 @@ podTemplate(
                 openshift.set("image", "dc/${destApp}", "${destApp}=docker-registry.default.svc:5000/${devProject}/tasks:${prodTag}")
               }
             }
-            sh("oc set env dc/${destApp} VERSION='${prodTag} (${destApp})' -n ${devProject}")
+            sh("oc set env dc/${destApp} VERSION='${prodTag} (${destApp})' -n ${prodProject}")
 
             openshiftDeploy depCfg: destApp, namespace: prodProject, verbose: 'false', waitTime: '', waitUnit: 'sec'
             openshiftVerifyDeployment depCfg: destApp, namespace: prodProject, replicaCount: '1', verbose: 'false', verifyReplicaCount: 'true', waitTime: '600', waitUnit: 'sec'
