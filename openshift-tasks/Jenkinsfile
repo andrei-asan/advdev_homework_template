@@ -94,7 +94,7 @@ podTemplate(
 
         //update Liveness and Readiness Probes as pod takes up to 90 seconds to start
         sh("oc set probe dc/tasks --readiness --get-url=http://:8080/ --initial-delay-seconds=90 --timeout-seconds=3 -n ${GUID}-tasks-dev")
-        sh("oc set probe dc/tasks --liveness --get-url=http://:8080/ --initial-delay-seconds=90 --timeout-seconds=3 -n ${GUID}-tasks-dev")
+        sh("oc set probe dc/tasks --liveness --get-url=http://:8080/ --initial-delay-seconds=30 --timeout-seconds=1 -n ${GUID}-tasks-dev")
         //update configmap
 
         sh("oc delete configmap tasks-config --ignore-not-found=true -n ${GUID}-tasks-dev")
@@ -155,9 +155,9 @@ podTemplate(
 
         //update Liveness and Readiness Probes as pod takes up to 90 seconds to start
         sh("oc set probe dc/tasks-blue --readiness --get-url=http://:8080/ --initial-delay-seconds=90 --timeout-seconds=3 -n ${GUID}-tasks-prod")
-        sh("oc set probe dc/tasks-blue --liveness --get-url=http://:8080/ --initial-delay-seconds=90 --timeout-seconds=3 -n ${GUID}-tasks-prod")
+        sh("oc set probe dc/tasks-blue --liveness --get-url=http://:8080/ --initial-delay-seconds=30 --timeout-seconds=1 -n ${GUID}-tasks-prod")
         sh("oc set probe dc/tasks-green --readiness --get-url=http://:8080/ --initial-delay-seconds=90 --timeout-seconds=3 -n ${GUID}-tasks-prod")
-        sh("oc set probe dc/tasks-green --liveness --get-url=http://:8080/ --initial-delay-seconds=90 --timeout-seconds=3 -n ${GUID}-tasks-prod")
+        sh("oc set probe dc/tasks-green --liveness --get-url=http://:8080/ --initial-delay-seconds=30 --timeout-seconds=1 -n ${GUID}-tasks-prod")
 
         //update configmap
         sh("oc delete configmap tasks-config --ignore-not-found=true -n ${GUID}-tasks-prod")
@@ -181,7 +181,7 @@ podTemplate(
             sh("oc set env dc/${destApp} VERSION='${prodTag} (${destApp})' -n ${prodProject}")
 
             openshiftDeploy depCfg: destApp, namespace: prodProject, verbose: 'false', waitTime: '', waitUnit: 'sec'
-            openshiftVerifyDeployment depCfg: destApp, namespace: prodProject, replicaCount: '1', verbose: 'false', verifyReplicaCount: 'true', waitTime: '600', waitUnit: 'sec'
+            openshiftVerifyDeployment depCfg: destApp, namespace: prodProject, replicaCount: '1', verbose: 'false', verifyReplicaCount: 'true', waitTime: '', waitUnit: 'sec'
             openshiftVerifyService namespace: prodProject, svcName: destApp, verbose: 'false'
         }
 
