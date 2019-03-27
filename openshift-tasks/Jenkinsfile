@@ -65,7 +65,7 @@ podTemplate(
               echo "Running Code Analysis"
 
             // TBD: Execute Sonarqube Tests
-              sh(mvnCmd + " admin:redhat -Dsonar.host.url=http://sonarqube.gpte-hw-cicd.svc.cluster.local:9000")
+              sh(mvnCmd + " sonar:sonar -Dsonar.host.url=http://sonarqube.gpte-hw-cicd.svc.cluster.local:9000")
           }
         )
       }
