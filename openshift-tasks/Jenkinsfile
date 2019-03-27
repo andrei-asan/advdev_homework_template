@@ -74,7 +74,7 @@ podTemplate(
         echo "Publish to Nexus"
 
         // TBD: Publish to Nexus
-        sh(mvCmd + " deploy -DskipTests=true -DaltDeploymentRepository=nexus::default::http://nexus3.gpte-hw-cicd.svc.cluster.local:8081/repository/releases")
+        sh(mvnCmd + " deploy -DskipTests=true -DaltDeploymentRepository=nexus::default::http://nexus3.gpte-hw-cicd.svc.cluster.local:8081/repository/releases")
 
       }
 
@@ -83,6 +83,9 @@ podTemplate(
         echo "Building OpenShift container image tasks:${devTag}"
 
         // TBD: Build Image, tag Image
+        sh("oc start-build -w tasks --from-file='./target/openshift-tasks.war' -n ${devProject}")
+        // TBD: Tag the image using the devTag.
+        sh("oc tag tasks:latest tasks:${devTag} -n ${devProject}")
       }
 
       // Deploy the built image to the Development Environment.
@@ -92,6 +95,32 @@ podTemplate(
         // TBD: Deploy to development Project
         //      Set Image, Set VERSION
         //      Make sure the application is running and ready before proceeding
+        script {
+          openshift.withCluster() {
+            openshift.withProject("${devProject}") {
+              openshift.set("image", "dc/tasks", "tasks=docker-registry.default.svc:5000/${devProject}/tasks:${devTag}")
+            }
+          }
+
+          sh("oc set env dc/tasks VERSION='${devTag} (tasks-dev)' -n ${devProject}")
+
+          openshift.withCluster() {
+            openshift.withProject("${devProject}") {
+              // Deploy the application.
+              openshift.selector("dc", "tasks").rollout().latest();
+
+              def dc = openshift.selector("dc", "tasks").object()
+              def dc_version = dc.status.latestVersion
+              def rc = openshift.selector("rc", "tasks-${dc_version}").object()
+
+              echo "Waiting for ReplicationController tasks-${dc_version} to be ready"
+              while (rc.spec.replicas != rc.status.readyReplicas) {
+                sleep 5
+                rc = openshift.selector("rc", "tasks-${dc_version}").object()
+              }
+            }
+          }
+        }
       }
 
       // Copy Image to Nexus container registry
@@ -99,8 +128,11 @@ podTemplate(
         echo "Copy image to Nexus container registry"
 
         // TBD: Copy image to Nexus container registry
+        sh("skopeo copy --src-tls-verify=false --dest-tls-verify=false --src-creds openshift:\$(oc whoami -t) --dest-creds admin:redhat docker://docker-registry.default.svc.cluster.local:5000/${devProject}/tasks:${devTag} docker://nexus-registry.gpte-hw-cicd.svc.cluster.local:5000/tasks:${devTag}")
+
 
         // TBD: Tag the built image with the production tag.
+        sh("oc tag tasks:latest tasks:${prodTag} -n ${devProject}")
       }
 
       // Blue/Green Deployment into Production
@@ -113,11 +145,36 @@ podTemplate(
         //      Set Image, Set VERSION
         //      Deploy into the other application
         //      Make sure the application is running and ready before proceeding
+        script {
+          echo "Get active service"
+          def get_service = sh(
+            returnStdout: true,
+            script: "oc get route tasks -n ${prodProject} -o jsonpath='{ .spec.to.name }'"
+            ).trim()
+
+            if ( get_service == 'tasks-green' ) {
+              destApp = 'tasks-blue'
+            }
+            openshift.withCluster() {
+              openshift.withProject("${prodProject}") {
+                openshift.set("image", "dc/${destApp}", "${destApp}=docker-registry.default.svc:5000/${devProject}/tasks:${prodTag}")
+              }
+            }
+            sh("oc set env dc/${destApp} VERSION='${prodTag} (${destApp})' -n ${devProject}")
+
+            openshiftDeploy depCfg: destApp, namespace: prodProject, verbose: 'false', waitTime: '', waitUnit: 'sec'
+            openshiftVerifyDeployment depCfg: destApp, namespace: prodProject, replicaCount: '1', verbose: 'false', verifyReplicaCount: 'true', waitTime: '600', waitUnit: 'sec'
+            openshiftVerifyService namespace: prodProject, svcName: destApp, verbose: 'false'
+        }
+
       }
 
       stage('Switch over to new Version') {
         echo "Switching Production application to ${destApp}."
         // TBD: Execute switch
+        echo "Executing production switch"
+        sh('oc patch route tasks -p \'{"spec":{"to":{"name":"' + destApp + '"}}}\' -n ' + prodProject)
+        // TBD: After approval execute the switch
       }
     }
   }
