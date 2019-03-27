@@ -19,12 +19,15 @@ oc new-app --template=jenkins-persistent \
 --param=VOLUME_CAPACITY=4Gi \
  -n ${GUID}-jenkins
 
+oc set resources dc jenkins --requests=cpu=1 --limits=cpu=1
+
 # Create custom agent container image with skopeo
 # TBD
 oc new-build  -D $'FROM docker.io/openshift/jenkins-agent-maven-35-centos7:v3.11\n
       USER root\nRUN yum -y install skopeo && yum clean all\n
       USER 1001' --name=jenkins-agent-appdev -n ${GUID}-jenkins
 
+#add slave to jenkins
 oc label is jenkins-agent-appdev role=jenkins-slave
 
 oc create configmap maven-appdev \
