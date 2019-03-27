@@ -36,7 +36,7 @@ oc create configmap maven-appdev \
 oc label configmap maven-appdev role=jenkins-slave
 
 # Create pipeline build config pointing to the ${REPO} with contextDir `openshift-tasks`
-oc new-build https://github.com/andrei-asan/advdev_homework_template --context-dir=openshift-tasks --strategy=pipeline --name=tasks-pipeline -e GUID=${GUID}
+oc new-build ${REPO} --context-dir=openshift-tasks --strategy=pipeline --name=tasks-pipeline -e GUID=${GUID}
 
 # Make sure that Jenkins is fully up and running before proceeding!
 while : ; do
