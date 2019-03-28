@@ -93,12 +93,12 @@ podTemplate(
         echo "Deploying container image to Development Project"
 
         //update Liveness and Readiness Probes as pod takes up to 90 seconds to start
-        //sh("oc set probe dc/tasks --readiness --get-url=http://:8080/ --initial-delay-seconds=90 --timeout-seconds=3 -n ${GUID}-tasks-dev")
-        //sh("oc set probe dc/tasks --liveness --get-url=http://:8080/ --initial-delay-seconds=30 --timeout-seconds=1 -n ${GUID}-tasks-dev")
+        //sh("oc set probe dc/tasks --readiness --get-url=http://:8080/ --initial-delay-seconds=120 --timeout-seconds=3 -n ${GUID}-tasks-dev")
+        //sh("oc set probe dc/tasks --liveness --get-url=http://:8080/ --initial-delay-seconds=120 --timeout-seconds=1 -n ${GUID}-tasks-dev")
         //update configmap
 
-        //sh("oc delete configmap tasks-config --ignore-not-found=true -n ${GUID}-tasks-dev")
-        //sh("oc create configmap tasks-config --from-file=./configuration/application-users.properties --from-file=./configuration/application-roles.properties -n ${GUID}-tasks-dev")
+        sh("oc delete configmap tasks-config --ignore-not-found=true -n ${GUID}-tasks-dev")
+        sh("oc create configmap tasks-config --from-file=./configuration/application-users.properties --from-file=./configuration/application-roles.properties -n ${GUID}-tasks-dev")
         // TBD: Deploy to development Project
         //      Set Image, Set VERSION
         //      Make sure the application is running and ready before proceeding
@@ -153,15 +153,15 @@ podTemplate(
         //      Deploy into the other application
         //      Make sure the application is running and ready before proceeding
 
-        //update Liveness and Readiness Probes as pod takes up to 90 seconds to start
-        //sh("oc set probe dc/tasks-blue --readiness --get-url=http://:8080/ --initial-delay-seconds=90 --timeout-seconds=3 -n ${GUID}-tasks-prod")
-        //sh("oc set probe dc/tasks-blue --liveness --get-url=http://:8080/ --initial-delay-seconds=30 --timeout-seconds=1 -n ${GUID}-tasks-prod")
-        //sh("oc set probe dc/tasks-green --readiness --get-url=http://:8080/ --initial-delay-seconds=90 --timeout-seconds=3 -n ${GUID}-tasks-prod")
-        //sh("oc set probe dc/tasks-green --liveness --get-url=http://:8080/ --initial-delay-seconds=30 --timeout-seconds=1 -n ${GUID}-tasks-prod")
+        //update Liveness and Readiness Probes as pod takes up to 120 seconds to start
+        //sh("oc set probe dc/tasks-blue --readiness --get-url=http://:8080/ --initial-delay-seconds=120 --timeout-seconds=3 -n ${GUID}-tasks-prod")
+        //sh("oc set probe dc/tasks-blue --liveness --get-url=http://:8080/ --initial-delay-seconds=120 --timeout-seconds=1 -n ${GUID}-tasks-prod")
+        //sh("oc set probe dc/tasks-green --readiness --get-url=http://:8080/ --initial-delay-seconds=120 --timeout-seconds=3 -n ${GUID}-tasks-prod")
+        //sh("oc set probe dc/tasks-green --liveness --get-url=http://:8080/ --initial-delay-seconds=120 --timeout-seconds=1 -n ${GUID}-tasks-prod")
 
         //update configmap
-        sh("oc delete configmap tasks-config --ignore-not-found=true -n ${GUID}-tasks-prod")
-        sh("oc create configmap tasks-config --from-file=./configuration/application-users.properties --from-file=./configuration/application-roles.properties -n ${GUID}-tasks-prod")
+        sh("oc delete configmap ${destApp}-config --ignore-not-found=true -n ${GUID}-tasks-prod")
+        sh("oc create configmap ${destApp}-config --from-file=./configuration/application-users.properties --from-file=./configuration/application-roles.properties -n ${GUID}-tasks-prod")
 
         script {
           echo "Get active service"
