@@ -17,6 +17,7 @@ echo "Setting up Jenkins in project ${GUID}-jenkins from Git Repo ${REPO} for Cl
 oc new-app --template=jenkins-persistent \
 --param=MEMORY_LIMIT=2Gi \
 --param=VOLUME_CAPACITY=4Gi \
+--param=DISABLE_ADMINISTRATIVE_MONITORS=true \
  -n ${GUID}-jenkins
 
 oc set resources dc jenkins --requests=cpu=1 --limits=cpu=2 -n ${GUID}-jenkins
